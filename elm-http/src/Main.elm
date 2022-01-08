@@ -2,6 +2,7 @@ module Main exposing (main)
 
 import Html exposing (..)
 import Html.Attributes exposing (alt, class, placeholder, src, type_)
+import List exposing (repeat)
 
 
 view : Html msg
@@ -15,18 +16,13 @@ view =
 containerLayout : Html msg
 containerLayout =
     div [ class "container-lg pt-3" ]
-        [ div [ class "d-flex flex-wrap flex-content-start" ]
-            [ dogCard
-            , dogCard
-            , dogCard
-            , dogCard
-            , dogCard
-            , dogCard
-            , dogCard
-            , dogCard
-            , dogCard
-            ]
+        [ div [ class "d-flex flex-wrap flex-content-start" ] (copyCard dogCard 5)
         ]
+
+
+copyCard : Html msg -> Int -> List (Html msg)
+copyCard card item =
+    repeat item card
 
 
 dogCard : Html msg
