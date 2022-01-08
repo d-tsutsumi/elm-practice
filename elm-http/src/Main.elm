@@ -6,7 +6,6 @@ import Html.Attributes exposing (alt, class, placeholder, src, type_)
 import Http
 import Json.Decode exposing (Decoder, list, string, succeed)
 import Json.Decode.Pipeline exposing (required)
-import List exposing (repeat)
 
 
 initialModel : Model
@@ -54,7 +53,7 @@ baseURL dogNum =
 fetchLoadImage : Cmd Msg
 fetchLoadImage =
     Http.get
-        { url = baseURL 5
+        { url = baseURL 9
         , expect = Http.expectJson LoadImage decodeDogImage
         }
 
@@ -75,25 +74,35 @@ update msg model =
 -- View
 
 
-containerLayout : Html msg
-containerLayout =
+viewDogImage : List String -> List (Html Msg)
+viewDogImage message =
+    List.map dogCard message
+
+
+loadedMessage : Maybe DogImage -> Html Msg
+loadedMessage images =
+    case images of
+        Just dogimage ->
+            div [ class "d-flex flex-wrap flex-content-start" ] (viewDogImage dogimage.message)
+
+        Nothing ->
+            div [ class "d-flex flex-wrap flex-content-start" ] [ text "Loading...." ]
+
+
+containerLayout : Model -> Html Msg
+containerLayout model =
     div [ class "container-lg pt-3" ]
-        [ div [ class "d-flex flex-wrap flex-content-start" ] (copyCard dogCard 5)
+        [ div [ class "d-flex flex-wrap flex-content-start" ] [ loadedMessage model.dogImage ]
         ]
 
 
-copyCard : Html msg -> Int -> List (Html msg)
-copyCard card item =
-    repeat item card
-
-
-dogCard : Html msg
-dogCard =
+dogCard : String -> Html msg
+dogCard message =
     div [ class "Box color-shadow-small flex-equal m-2" ]
         [ div [ class "Box-row" ]
             [ img
                 [ class "img-responsive dog-image"
-                , src "./../public/pexels-christian-domingues-731022.jpg"
+                , src message
                 , alt "dog"
                 ]
                 []
@@ -135,11 +144,11 @@ header =
         ]
 
 
-view : Model -> Html msg
+view : Model -> Html Msg
 view model =
     div []
         [ header
-        , containerLayout
+        , containerLayout model
         ]
 
 
