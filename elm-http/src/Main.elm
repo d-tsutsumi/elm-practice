@@ -1,16 +1,78 @@
 module Main exposing (main)
 
+import Browser
 import Html exposing (..)
 import Html.Attributes exposing (alt, class, placeholder, src, type_)
+import Http
+import Json.Decode exposing (Decoder, list, string, succeed)
+import Json.Decode.Pipeline exposing (required)
 import List exposing (repeat)
 
 
-view : Html msg
-view =
-    div []
-        [ header
-        , containerLayout
-        ]
+initialModel : Model
+initialModel =
+    { dogImage = Nothing
+    }
+
+
+type alias DogImage =
+    { message : List String
+    , status : String
+    }
+
+
+type Msg
+    = LoadImage (Result Http.Error DogImage)
+
+
+type alias Model =
+    { dogImage : Maybe DogImage
+    }
+
+
+init : () -> ( Model, Cmd Msg )
+init () =
+    ( initialModel, fetchLoadImage )
+
+
+decodeDogImage : Decoder DogImage
+decodeDogImage =
+    succeed DogImage
+        |> required "message" (list string)
+        |> required "status" string
+
+
+baseURL : Int -> String
+baseURL dogNum =
+    "https://dog.ceo/api/breeds/image/random/" ++ String.fromInt dogNum
+
+
+
+-- Update
+
+
+fetchLoadImage : Cmd Msg
+fetchLoadImage =
+    Http.get
+        { url = baseURL 5
+        , expect = Http.expectJson LoadImage decodeDogImage
+        }
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        LoadImage (Ok dogImage) ->
+            ( { model | dogImage = Just dogImage }
+            , Cmd.none
+            )
+
+        LoadImage (Err _) ->
+            ( model, Cmd.none )
+
+
+
+-- View
 
 
 containerLayout : Html msg
@@ -73,6 +135,24 @@ header =
         ]
 
 
-main : Html msg
+view : Model -> Html msg
+view model =
+    div []
+        [ header
+        , containerLayout
+        ]
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.none
+
+
+main : Program () Model Msg
 main =
-    view
+    Browser.element
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = subscriptions
+        }
